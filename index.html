@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="shortcut icon" href="./assets/favicon.ico">
+    <title>Kimi-Researcher: End-to-End RL Training for Emerging Agentic Capabilities</title>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        options: {
+          enableMenu: false
+        },
+        startup: {
+          pageReady: () => {
+            return MathJax.startup.defaultPageReady().then(() => {
+              document.querySelectorAll('latex, latex-inline').forEach(function(el) {
+                el.style.visibility = 'visible';
+              });
+            });
+          }
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: PingFang SC,Microsoft Yahei,Arial,Hiragino Sans GB,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;
+            margin: 0;
+            padding: 0;
+            background-color: #16191e;
+            color: #eaeef4;
+            font-weight: 400;
+        }
+
+        strong {
+            font-weight: 900;
+        }
+
+        a {
+            color: #eaeef4;
+        }
+
+        a.note {
+            text-decoration: none;
+        }
+
+        header {
+            color: #eaeef4;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding-top: 60px;
+            padding-bottom: 20px;
+        }
+        header * {
+            max-width: 800px;
+            margin: 0 auto;
+            color: #eaeef4;
+        }
+        header h1 {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0;
+            color: #eaeef4;
+        }
+        header h2 {
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+            color: #eaeef4;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .caption {
+            padding-top: 10px;
+            margin-left: 20px;
+            font-size: 13px;
+            color: #b8bcc2;
+            text-align: left;
+        }
+
+        .caption * {
+            font-size: 13px;
+            color: #b8bcc2;
+        }
+
+        section {
+            padding: 20px 20px;
+            text-align: left;
+            background-color: #16191e;
+        }
+
+        section * {
+            max-width: 800px;
+            margin: 0 auto;
+            color: #eaeef4;
+            font-size: 18px;
+        }
+
+        section h3 {
+            font-size: 30px;
+            margin-bottom: 20px;
+            color: #eaeef4;
+        }
+
+        section h4 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #eaeef4;
+        }
+
+        section p {
+            padding-bottom: 20px;
+        }
+
+        section ol {
+            padding-bottom: 20px;
+        }
+
+        section ul {
+            padding-bottom: 20px;
+        }
+
+        section .figure {
+            text-align: center;
+            padding-bottom: 20px;
+        }
+
+        section .figure .half {
+            display: inline-block;
+            width: 45%;
+            max-width: 400px;
+        }
+
+        section .block .half {
+            display: inline-block;
+            width: 45%;
+            max-width: 400px;
+        }
+
+        footer {
+            background-color: #16191e;
+            color: #e1e1e1;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        footer p {
+            margin: 0;
+            color: #e1e1e1;
+            font-size: 14px;
+        }
+
+        .banner-image {
+            max-width: 160px;
+            width: 25%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            padding-top: 0.9%;
+        }
+
+        .mlarge-image {
+            max-width: 650px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+            margin-bottom: 5px
+        }
+
+        .slarge-image {
+            max-width: 750px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+            margin-bottom: 5px
+        }
+
+        .llarge-image {
+            max-width: 800px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+            margin-bottom: 5px
+        }
+
+        .large-image {
+            max-width: 800px;
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+            margin-bottom: 5px
+        }
+
+
+        .date-time {
+            font-size: 18px;
+            color: #eaeef4;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            max-width: 800px;
+            margin: 0 auto;
+
+            text-align: left;
+            background-color: #24272b;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            background-color: #eaecef;
+            border: 1px solid #d1d5da;
+            border-radius: 4px;
+        }
+
+        .table {
+            background: none;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding-bottom: 20px;
+        }
+        .table table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #181b20;
+            font-size: 15px;
+            color: #eaeef4;
+        }
+        .table th, .table td {
+            padding: 12px 20px;
+            text-align: left;
+        }
+        .table th {
+            background: #23262b;
+            color: #f5f6fa;
+            font-weight: 700;
+            border-bottom: 2px solid #3a3d44;
+            letter-spacing: 0.03em;
+        }
+        .table tr {
+            border-bottom: 1px solid #23262b;
+        }
+        .table tr:last-child {
+            border-bottom: none;
+        }
+        .table td {
+            border-bottom: 1px solid #23262b;
+            vertical-align: middle;
+        }
+        .table tr:nth-child(even) td {
+            background: #1c1f25;
+        }
+        .table tr:hover td {
+            background: #23262b;
+        }
+        .table sup {
+            font-size: 12px;
+            color: #b8bcc2;
+        }
+        latex {
+            display: block;
+            visibility: hidden;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        latex-inline {
+            visibility: hidden;
+        }
+
+        markdown {
+            visibility: hidden;
+            display: block;
+            background-color: #24272b;
+            padding: 1em;
+            border-radius: 0;
+            overflow-y: auto;
+        }
+
+        .markdown-container {
+            border: 1px solid #3a3d44;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            background-color: #181b20;
+        }
+
+        .markdown-title {
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 18px;
+            background: #23262b;
+            border-bottom: 1px solid #3a3d44;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        markdown h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+
+        markdown h2 {
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        markdown h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        markdown table {
+            background: none;
+            border-radius: 8px;
+            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding-bottom: 20px;
+        }
+        markdown table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #181b20;
+            font-size: 15px;
+            color: #eaeef4;
+        }
+        markdown table th, markdown table td {
+            padding: 12px 20px;
+            text-align: left;
+        }
+        markdown table th {
+            background: #23262b;
+            color: #f5f6fa;
+            font-weight: 700;
+            border-bottom: 2px solid #3a3d44;
+            letter-spacing: 0.03em;
+        }
+        markdown table tr {
+            border-bottom: 1px solid #23262b;
+        }
+        markdown table tr:last-child {
+            border-bottom: none;
+        }
+        markdown table td {
+            border-bottom: 1px solid #23262b;
+            vertical-align: middle;
+        }
+        markdown table tr:nth-child(even) td {
+            background: #1c1f25;
+        }
+        markdown table tr:hover td {
+            background: #23262b;
+        }
+        markdown table sup {
+            font-size: 12px;
+            color: #b8bcc2;
+        }
+
+        ul.toc {
+            list-style: none;
+        }
+
+        /* Tabs component styles */
+        .tabs {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #3a3d44;
+            margin-bottom: 20px;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            color: #b8bcc2;
+            font-size: 18px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px; /* align with container border */
+        }
+
+        .tab-button:hover {
+            color: #eaeef4;
+        }
+
+        .tab-button.active {
+            color: #eaeef4;
+            border-bottom: 2px solid #eaeef4;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <img src="./assets/moonshot_logo.png" alt="Moonshot AI" class="banner-image" id="banner">
+
+    <header>
+        <h1>Kimi-Researcher</h1>
+        <h2>End-to-End RL Training for Emerging Agentic Capabilities</h2>
+
+        <div class="date-time">
+            June 20, 2025 &bull; 10 min read
+        </div>
+    </header>
+
+    <section id="abstract">
+        <p>
+            Meet <b>Kimi-Researcher</b>, an autonomous agent that excels at multi-turn search and reasoning. It performs an average of 23 reasoning steps and explores over 200 URLs per task. Built on an internal version of the <a href="https://arxiv.org/abs/2501.12599" target="_blank">Kimi k-series model</a> and trained entirely through end-to-end agentic reinforcement learning (RL), it achieved a Pass@1 score of <b>26.9%</b>—a state-of-the-art result—on <a href="https://agi.safe.ai/" target="_blank">Humanity's Last Exam</a>, and Pass@4 accuracy of <b>40.17%</b>. Starting from an initial HLE score of 8.6%, Kimi-Researcher reached 26.9% almost entirely through end-to-end RL training, providing compelling evidence that end-to-end agentic RL can significantly advance agent intelligence.
+        </p>
+        <p>
+            Kimi-Researcher has also achieved strong performance across several complex and challenging real-world benchmarks. On <a href="https://xbench.org/" target="_blank">xbench</a>, a new, dynamic, professionally-aligned suite designed to bridge AI capabilities with real-world productivity, Kimi-Researcher achieved 69% pass@1 (averaged on 4 runs) on xbench-DeepSearch, outperforming models such as o3 with search tools. On benchmark tests for multi-turn search reasoning (<a href="https://arxiv.org/abs/2409.12941" target="_blank">FRAMES</a>, <a href="https://arxiv.org/abs/2506.01062v1" target="_blank">Seal-0</a>) and factual information (<a href="https://arxiv.org/abs/2411.04368" target="_blank">SimpleQA</a>), Kimi-Researcher also achieved strong performance.
+        </p>
+
+        <div class="figure">
+            <img src="./assets/figure/1.png" alt="Comparison of Kimi-Researcher and other models">
+            <b>Figure 1</b>
+            <ol class="caption">
+                <li>
+                    Potential fluctuations in tools, such as search engines, may affect performance. The results are tested on: HLE on June 17, 2025; and xbench-DeepSearch, Seal-0, Frames, and SimpleQA on June 18, 2025.
+                </li>
+                <li>
+                    All Kimi-Researcher results were evaluated using o3-mini. Scores of other models are referenced from the relevant papers or leaderboards.
+                    <a href="https://storage.googleapis.com/deepmind-media/gemini/gemini_v2_5_report.pdf" target="_blank"><sup>[1]</sup></a>
+                    <a href="https://github.com/deepseek-ai/DeepSeek-R1/blob/main/DeepSeek_R1.pdf" target="_blank"><sup>[2]</sup></a>
+                    <a href="https://arxiv.org/abs/2503.20201" target="_blank"><sup>[3]</sup></a>
+                    <a href="https://openai.com/index/introducing-deep-research/" target="_blank"><sup>[4]</sup></a>
+                    <a href="https://lastexam.ai/" target="_blank"><sup>[5]</sup></a>
+                </li>
+                <li>
+                    For benchmarks with fewer than 200 test samples (xbench, Seal-0), we performed four runs and reported the average result (avg@4).
+                </li>
+                <li>
+                    We do not compare multi-agent workflows based on multiple frontier models here, as our focus is on evaluating model capabilities.
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section id="end-to-end-agentic-rl-is-promising-but-challenging">
+        <h3>
+            End-to-end agentic RL is promising but challenging
+        </h3>
+        <p>
+            Kimi-Researcher is an autonomous agentic and thinking model designed to solve complex problems through multi-step planning, reasoning, and tool use. It leverages three main tools: a parallel, real-time internal <b>search tool</b>; a text-based <b>browser tool</b> for interactive web tasks; and a <b>coding tool</b> for automated code execution.
+        </p>
+        <p>
+            Formally, given the state observation <latex-inline>\(s_t\)</latex-inline> (for instance, <latex-inline>\(s_0\)</latex-inline> includes system prompt, tool declarations, and user query) , Kimi-Researcher generates <latex-inline>\(\text{think}_t\)</latex-inline> and <latex-inline>\(\text{action}_t\)</latex-inline>. An action can either be a tool call or an indication to terminate the trajectory. The detailed behavior of Kimi-Researcher is as follows:
+
+            <latex>
+                \begin{cases}
+                (s_t) \xrightarrow{\text{Kimi-Researcher}} (\text{think}_t, \text{action}_t) \\
+              s_{t+1} = \text{context_manager}(s_t, \text{think}_t, \text{tool_call_result}_t) & \text{if } \text{action}_t \neq \text{finish} \\
+                \text{terminate} & \text{if } \text{action}_t = \text{finish}
+                \end{cases}
+            </latex>
+        </p>
+        <p>
+            Traditional agent development has key limitations:
+            <ol>
+                <li>
+                    <b>Workflow-Based Systems:</b> <a href="https://www.anthropic.com/engineering/built-multi-agent-research-system" target="_blank">Multi-agent workflows</a> assign roles to specialized agents and coordinate the agents using prompt-based workflows. While effective, they are tied to specific LLM versions and need frequent manual updates as models or environments change, reducing scalability and flexibility.
+                </li>
+                <li>
+                    <b>Imitation Learning with Supervised Finetuning (SFT):</b> Imitation learning aligns models well with human demonstrations but struggles with data labeling—especially for long-horizon, agentic tasks in dynamic environments. Furthermore, SFT datasets are tightly coupled with specific tool versions, resulting in poor generalization as tools evolve.
+                </li>
+            </ol>
+        </p>
+        <p>
+            End-to-end agentic reinforcement learning trains a single model to solve problems holistically: given a query, the agent explores a large number of possible strategies, receives rewards for correct solutions, and learns from the full trajectory. Unlike SFT, it naturally handles long, on-policy reasoning and adapts to changing tools and environments; unlike modular approaches, all skills—planning, perception, and tool use—are learned together without hand-crafted rules or workflow templates. Previous work like <a href="https://openai.com/index/introducing-deep-research/" target="_blank">OpenAI's Deep Research</a> also highlights the strong performance of this approach, but it introduces new challenges:
+        </p>
+        <ul>
+            <li>
+                <b>Dynamic Environments:</b>
+                Agents must adapt to constantly changing conditions, as even identical queries can yield different results over time. The goal is robust generalization despite distribution shifts.
+            </li>
+            <li>
+                <b>Long-Horizon Tasks:</b>
+                Kimi-Researcher can run 70+ search queries<a href="#note-long-horizon-tasks" class="note">*</a> per trajectory, with context windows reaching hundreds of thousands of tokens. This demands advanced memory management and long-context models.
+            </li>
+            <li>
+                <b>Data Scarcity:</b>
+                High-quality RL datasets for agentic QA are rare. We address this by automatically synthesizing training data, allowing large-scale learning without manual labeling.
+            </li>
+            <li>
+                <b>Rollout Efficiency:</b>
+                Multi-turn reasoning and heavy tool use can slow training and cause GPU under-utilization. Optimizing rollout efficiency is crucial for scalable, practical agent RL training.
+            </li>
+            <div class="caption" id="note-long-horizon-tasks">
+                <sup>*</sup> calculated based on a small set of queries.
+            </div>
+        </ul>
+    </section>
+    <section id="approach">
+        <h3>Approach</h3>
+        <p>
+            Kimi-Researcher is trained via end-to-end reinforcement learning. We observe a consistent improvement in agent performance across different domains. <a href="#figure-2-a">Figure 2-a</a> illustrates the overall training accuracy of Kimi-Researcher throughout the reinforcement learning process. <a href="#figure-2-b">Figure 2-b</a> presents model performance on several internal datasets.
+        </p>
+
+        <div class="figure">
+            <div class="half" id="figure-2-a">
+                <img src="./assets/figure/2-a.svg" />
+                <strong>Figure 2-a</strong>
+            </div>
+            <div class="half" id="figure-2-b">
+                <img src="./assets/figure/2-b.svg" />
+                <strong>Figure 2-b</strong>
+            </div>
+        </div>
+
+        <section id="training-data">
+            <h4>Training data</h4>
+            <p>
+                To address the scarcity of high-quality agentic datasets, we engineered our training corpus with two complementary objectives.
+            </p>
+            <p>
+                First, we developed a suite of challenging, tool-centric tasks designed to promote robust tool-use learning. These prompts are deliberately constructed such that solving the task requires invoking specific tools—making naive approaches either infeasible or substantially less efficient. By embedding tool dependencies into task design, the agent learns not only when to invoke a tool, but also how to orchestrate tool use effectively in complex, real-world settings. (See <a href="#figure-3">Figure 3</a> for tool invocation rates using these training data.)
+            </p>
+
+            <div class="figure">
+                <div class="half" id="figure-3">
+                    <img src="./assets/figure/3.svg" />
+                    <strong>Figure 3</strong>
+                </div>
+                <div class="half" id="figure-4">
+                    <img src="./assets/figure/4.png" />
+                    <strong>Figure 4</strong>
+                </div>
+            </div>
+
+            <p>
+                Second, we curated and synthesized reasoning-intensive tasks to reinforce the agent's core cognitive abilities and its capacity to integrate reasoning with tool usage. This component is further subdivided into:
+            </p>
+            <ul>
+                <li>
+                    <b>Math and Code Reasoning:</b> Tasks that target logical inference, algorithmic problem-solving, and sequential computation. Kimi-Researcher learns to solve this kind of problem with our toolset beyond purely using chain-of-thought.
+                </li>
+                <li>
+                    <b>Hard Search:</b> Scenarios where the agent must iteratively search, synthesize, and reason within context constraints to derive valid answers. Case studies illustrate how these hard search tasks drive the emergence of deeper planning and robust, tool-augmented reasoning strategies.
+                </li>
+            </ul>
+            <p>
+                To build this diverse prompt set at scale, we developed a <b>fully automated pipeline</b> capable of generating and validating many question-answer pairs with <b>minimal manual intervention</b>, ensuring both diversity and correctness at unprecedented scale. <b>Ensuring accurate ground truth (GT) is critical for synthetic tasks</b>, so we introduced a robust GT extraction method to guarantee that each question is paired with a reliable answer whenever possible. Additionally, a rigorous filtering funnel removes ambiguous, trivial, or incorrect pairs — with <b>Pass@N checks ensuring only non-trivial questions are retained</b>. <a href="#figure-4">Figure 4</a> shows the effectiveness of our synthetic tasks based on two experimental results.
+            </p>
+        </section>
+        <section id="rl-training">
+            <h4>RL training</h4>
+            <p>
+                The model is primarily trained using the <a href="https://link.springer.com/content/pdf/10.1007/BF00992696.pdf" target="_blank">REINFORCE</a> algorithm. We have observed that the following factors contribute to more stable training:
+            </p>
+            <ul>
+                <li>
+                    <b>On-policy Training:</b> It is critical to generate strict on-policy data. During training, we disable LLM engine mechanisms like toolcall format enforcers to ensure each trajectory is generated entirely based on the model's own probability distribution.
+                </li>
+                <li>
+                    <b>Negative Sample Control:</b> Negative samples lead to a decrease in token probabilities, which increases the risk of entropy collapse during RL training. To address this, we discard some negative samples strategically, allowing the model to continue improving over a longer training period.
+                </li>
+            </ul>
+            <p>
+                Kimi-Researcher uses outcome rewards for training, aiming to provide a constant preference in a dynamic training environment.
+            </p>
+            <ul>
+                <li>
+                    <b>Format Reward:</b> The model is penalized for trajectories that include invalid tool calls or if the context/iteration exceeds the maximum limitation.
+                </li>
+                <li>
+                    <b>Correctness Reward:</b> For trajectories without format errors, rewards are based on the comparison between the model's answer and the ground truth.
+                </li>
+            </ul>
+            <p>
+                To promote efficiency, a gamma-decay factor is applied to correct trajectories. Concretely, the reward of step <latex-inline>\(i\)</latex-inline> becomes <latex-inline>\(r\times\gamma^{T - i}\)</latex-inline>, where <latex-inline>\(r\)</latex-inline> is the outcome reward, <latex-inline>\(T\)</latex-inline> is the number of steps, and <latex-inline>\(0&lt;\gamma&lt;1\)</latex-inline> represents the gamma-decay coeficient. This encourages the model to discover shorter, more efficient exploration. For example, while two correct trajectories may receive equal final rewards, the shorter one earns a higher reward for its initial actions.
+            </p>
+        </section>
+        <section id="context-management">
+            <h4>Context management</h4>
+            A long-horizon research trajectory may involve massive observation contexts, and a naive agent without memory management can easily exceed the limitation within 10 iterations. To address this, we design a context-management mechanism that allows the model to retain important information while discarding unnecessary documents, thereby extending a single rollout trajectory to over 50 iterations. An early ablation study shows that a model trained with context management uses <b>30%</b> more iterations, which enables it to acquire more information and achieve higher performance.
+        </section>
+        <section id="large-scale-agent-rl-infra">
+            <h4>Large-scale agent RL infra</h4>
+            <div class="figure">
+                <img src="./assets/figure/5.png" alt="Large-scale agent RL infrastructure">
+                <b>Figure 5</b>
+            </div>
+            <p>
+                To address the efficiency and stability challenges of large-scale Agent RL, we have developed a suite of infrastructure with the following key features:
+            </p>
+            <ul>
+                <li>
+                    <b>Fully asynchronous rollout:</b> We implement a fully asynchronous rollout system with extensible Gym-like interfaces. The server-based architecture efficiently orchestrates actor rollouts, environmental interactions, and reward calculations in parallel. This design significantly outperforms its synchronous counterpart by eliminating resource idle time.
+                </li>
+                <li>
+                    <b>Turn-level partial rollout:</b> During Agent RL, while the majority of tasks completed at the early stage, a small fraction required extensive turns. To solve this long-tail problem, we designed a Turn-level Partial Rollout mechanism. Concretely, tasks that exceed a time budget would be saved to a replay buffer. In subsequent iterations, the remaining turns would be executed with updated model weights. Combined with adapted algorithms, this mechanism delivers substantial rollout acceleration (at least 1.5x).
+                </li>
+                <li>
+                    <b>Robust sandbox environment:</b> Our unified sandbox architecture eliminates inter-container overhead while maintaining isolation. Zero-downtime scheduling with Kubernetes-based hybrid cloud architecture enables dynamic resource allocation. Agent-tool communication via Model Context Protocol (MCP) maintains stateful sessions with reconnection capabilities. Our implementation supports multi-replica deployment, ensuring fault-tolerant operation and high availability in production environments.
+                </li>
+            </ul>
+        </section>
+    </section>
+
+
+    <section id="emerging-agentic-capacities">
+        <h3>Emerging agentic capacities</h3>
+        <p>
+            During end-to-end reinforcement learning, we observed several notable emergent abilities in Kimi-Researcher. Here are two highlights:
+        </p>
+        <ul>
+            <li>
+                When presented with conflicting information from multiple sources, Kimi-Researcher resolves inconsistencies through iterative hypothesis refinement and self-correction.
+            </li>
+            <div class="block" style="margin-top: 20px">
+                <markdown title="Query" style="height: 150px;">
+"Strange Stories from a Chinese Studio" is a collection of classical Chinese short stories written by the Qing Dynasty novelist Pu Songling. The earliest manuscript copies were already in circulation during the Kangxi reign of the Qing Dynasty, and the collection comprises over four hundred short stories in total. In Volume Ten of "Strange Stories from a Chinese Studio," there is a story titled "The Green-Clothed Girl." In this story, **how many sentences did the scholar Yu Jing speak with her?**
+                </markdown>
+            </div>
+            <div class="block">
+                <markdown title="Reasoning Process" style="height: 400px">
+...Now I will use the search tool.
+
+...Numbers [^5^] and [^6^] are **vernacular translations from Himalaya**...In addition, numbers [^16^] and [^17^] are **the original texts**, I need to cross-reference them again...The dialogue between Yu Jing and the woman in green may have different records in **different versions**...
+
+...I counted carefully, and in the vernacular translation of number [^5^], Yu Jing seems to have said **six sentences**. But in the original texts of numbers [^16^], [^44^], [^48^], etc., counting them up, Yu Jing said **four sentences**...Well, according to my previous compilation, numbers [^68^], [^88^], [^89^], [^90^], etc. all provide the original text of "The Woman in Green"...So, Yu Jing said a total of four sentences. Previously, when I counted six sentences in the translation of number [^5^], it may be because the translation converted some narrative sentences into direct quotations...
+
+...Considering that in classical Chinese, these direct quotations are explicit, while if the translation added some dialogue, it may have been embellishment done for ease of understanding...
+
+...After careful verification, the words Yu Jing directly said in the original text are: 1. "Your voice is delicate and soft, if you were to sing a song, it would surely be soul-stirring." 2. "Why are you so deeply suspicious and fearful?" 3. "A stirring heart and wandering eyes are common occurrences, why do you say such things?" 4. "Yes." Therefore, Yu Jing spoke a total of four sentences in the story. **Previously, in the translation of number [^5^], I mistakenly took some narrative sentences as dialogue, leading to a miscount. After confirmation, the original classical Chinese text is authoritative and has been verified multiple times.** It seems that in "The Woman in Green," Yu Jing indeed said four sentences. I think I can answer this question now.
+
+Answer: **4**
+
+In "The Woman in Green" from Volume 10 of "Strange Tales from a Chinese Studio," the scholar Yu Jing spoke a total of **4** sentences.
+                </markdown>
+            </div>
+
+            <li>
+                Kimi-Researcher demonstrates caution and rigor: even for seemingly straightforward questions, it deliberately performs additional searches and cross-validates information before answering.
+            </li>
+            <div class="block" style="margin-top: 20px">
+                <markdown title="Query" style="height: 100px">
+A country located in South America, where the most popular sport is baseball, not football. Football is relatively less popular in this country, which has never qualified for the FIFA World Cup finals but has hosted the Copa América. In terms of football, the country has had a star player who once played in the Bundesliga. Who might that be?
+                </markdown>
+            </div>
+            <div class="block">
+                <markdown title="Reasoning Process" style="height: 400px">
+...From the previous search results, I can infer: This South American country is **Venezuela**. Its most popular sport is baseball. It has never entered the World Cup finals. It hosted the Copa América (2007). Football star **Juan Arango** once played for Borussia Mönchengladbach in the Bundesliga.
+
+To confirm whether Juan Arango is a Venezuelan football star who once played in the Bundesliga, I...
+
+...To further confirm, I want to search for more information about Juan Arango to verify...
+
+...I previously assumed it was Venezuela, but need further verification...
+
+...To further confirm the accuracy of the information...need to re-verify.
+
+...Additionally, I also need to search for other players who might fit, perhaps whether Venezuelan players like Caracas, Torres, Maldonado, etc. have ever played in the Bundesliga...covering information in both Chinese and English to improve the comprehensiveness of the search.
+
+...According to the information from references [^62^] and [^66^]...this information all supports that **Juan Fernando Arango** is Venezuela's star player in football who once played in the Bundesliga.
+
+Combined with the previous search results...
+
+To obtain more official and authoritative information for further confirmation, I decided to call up the complete content of reference [^62^]...I now feel that I have collected enough information to answer this question completely.
+
+Answer: **Juan Fernando Arango**
+                </markdown>
+            </div>
+        </ul>
+    </section>
+
+    <section id="use-case">
+        <h3>Use cases</h3>
+        <div class="tabs">
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="case-1">Academic research</button>
+                <button class="tab-button" data-tab="case-2">Legal & regulatory insights</button>
+                <button class="tab-button" data-tab="case-3">Obscure information retrieval</button>
+                <button class="tab-button" data-tab="case-4">Clinical evidence review</button>
+                <button class="tab-button" data-tab="case-5">Corporate financial analysis</button>
+            </div>
+            <div class="tab-content">
+                <div id="case-1" class="tab-panel active">
+                    <markdown style="max-height: 800px;" title="Query: What are the key molecular and cellular mechanisms driving peripheral nerve regeneration after injury, and what critical gaps remain in our current understanding?" src="./assets/usecase/case-1.md"></markdown>
+                </div>
+                <div id="case-2" class="tab-panel">
+                    <markdown style="max-height: 800px;" title="Query: I'm an in-house lawyer at a Chinese robotics company, and management is considering expanding into Southeast Asian countries. However, I'm not entirely confident about the data and privacy requirements in those countries. Could you help me list the data and privacy laws of Southeast Asian countries (on a country-by-country basis), and preferably provide a brief summary and key takeaways for each of these laws?" src="./assets/usecase/case-2.md"></markdown>
+                </div>
+                <div id="case-3" class="tab-panel">
+                    <markdown style="max-height: 800px;" title="Query: I want to find a foreign animated movie about a princess married off to a powerful wizard. I remember that she's kept in a tower until she can be married, and that she sneaks into town to see people sew or something. Anyway, one day several princes bring great gifts from all over the world, and she finds out one of the prince's battles with the natives to get this orb thing as a gift, and she calls him a thief for stealing their relic from them. The king is then convinced by a wizard that she is lying because she is infected with an evil spirit of some sort, and promises to cleanse her in return for her hand in marriage or something. He then magics her into looking like a woman and then spirits her away. He then locks her up in a dungeon, but she has a wishing ring with three wishes or something. She's magic-ed not to want to escape, so she wastes the first two wishes on stupid things like cloth or a bed or something... and then she escapes I think... and tricks the wizard... at some point... and finds a rock that creates water... and there was something to do with people being turned into frogs i think... Anyway, this all takes place in a sort of post apocalyptic type world, hundreds of years after a great magical civilization crumbled. If anyone has a clue, I'd love to hear it. I've been trying to find this movie again for ages." src="./assets/usecase/case-3.md"></markdown>
+                </div>
+                <div id="case-4" class="tab-panel">
+                    <markdown style="max-height: 800px;" title="Query: What is the latest consensus on the use of low-dose CT screening for lung cancer in different risk populations according to major international guidelines as of 2025?" src="./assets/usecase/case-4.md"></markdown>
+                </div>
+                <div id="case-5" class="tab-panel">
+                    <markdown style="max-height: 800px;" title="Query: Please conduct an in-depth analysis of Pinduoduo's Q1 2025 financial report." src="./assets/usecase/case-5.md"></markdown>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="whats-next">
+        <h3>What's next</h3>
+        <p>
+            Kimi-Researcher is beginning its gradual rollout to users today. It empowers you to conduct deep, comprehensive research on any topic directly within <a href="https://www.kimi.com/" target="_blank">Kimi</a>. Join the waitlist <a href="https://forms.gle/CRcZGWKAoYNsMjad8" target="_blank">here</a>.
+        </p>
+        <p>
+            It represents the early stage of our broader vision: evolving from a focused search and reasoning agent into a general-purpose agent capable of solving a wide range of complex tasks with an ever-expanding toolkit. To realize this vision, we are expanding the agent's capabilities across both tools and task domains, while also advancing the underlying reinforcement learning infrastructure and algorithms to ensure greater training stability and efficiency.
+        </p>
+        <p>
+            To facilitate more research efforts in the field, we are planning on open-sourcing the base pretrained model as well as the reinforcement-learned model underlying Kimi-Researcher in the following months.
+        </p>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 Moonshot. All rights reserved.</p>
+    </footer>
+
+    <!-- Floating TOC Button -->
+    <button id="toc-btn" style="
+      position: fixed; right: 30px; bottom: 30px; z-index: 9999;
+      background: #23262b; color: #fff; border: 2px solid #3a3d44; border-radius: 50%;
+      width: 56px; height: 56px; font-size: 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    ">TOC</button>
+
+    <!-- TOC Popup -->
+    <div id="toc-popup" style="
+      display: none; position: fixed; right: 40px; bottom: 100px; z-index: 10000;
+      background: #181b20; color: #eaeef4; border: 2px solid #3a3d44; border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+      padding: 24px 32px; min-width: 220px;
+    ">
+      <strong style="font-size:20px;">Table of Contents</strong>
+      <ul class="toc" style="padding-left: 0">
+        <li>
+            <a href="#banner">Kimi-Researcher</a>
+        </li>
+        <li>
+            <a href="#end-to-end-agentic-rl-is-promising-but-challenging">End-to-end agentic RL is promising but challenging</a>
+        </li>
+        <li>
+            <a href="#approach">Approach</a>
+            <ul class="toc">
+                <li>
+                    <a href="#training-data">Training data</a>
+                </li>
+                <li>
+                    <a href="#rl-training">RL training</a>
+                </li>
+                <li>
+                    <a href="#context-management">Context management</a>
+                </li>
+                <li>
+                    <a href="#large-scale-agent-rl-infra">Large-scale agent RL infra</a>
+                </li>
+            </ul>
+        </li>
+        <li>
+            <a href="#emerging-agentic-capacities">Emerging agentic capacities</a>
+        </li>
+        <li>
+            <a href="#use-case">Use cases</a>
+        </li>
+        <li>
+            <a href="#whats-next">What's next</a>
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      // Control TOC popup show/hide
+      const tocBtn = document.getElementById('toc-btn');
+      const tocPopup = document.getElementById('toc-popup');
+      tocBtn.onclick = function() {
+        tocPopup.style.display = tocPopup.style.display === 'block' ? 'none' : 'block';
+      };
+      // Auto close popup after clicking TOC item
+      tocPopup.querySelectorAll('a').forEach(a => {
+        a.onclick = () => { tocPopup.style.display = 'none'; };
+      });
+      // Auto close popup when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!tocPopup.contains(e.target) && e.target !== tocBtn) {
+          tocPopup.style.display = 'none';
+        }
+      });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('markdown').forEach(function(el) {
+                const title = el.getAttribute('title');
+                if (title) {
+                    const container = document.createElement('div');
+                    container.className = 'markdown-container';
+
+                    const titleEl = document.createElement('div');
+                    titleEl.className = 'markdown-title';
+                    titleEl.textContent = title;
+                    container.appendChild(titleEl);
+
+                    el.parentNode.insertBefore(container, el);
+                    container.appendChild(el);
+                }
+
+                const src = el.getAttribute('src');
+                if (src) {
+                    fetch(src)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.text();
+                        })
+                        .then(markdownContent => {
+                            el.innerHTML = marked.parse(markdownContent);
+                            el.style.visibility = 'visible';
+                        })
+                        .catch(error => {
+                            console.error('Error fetching markdown:', error);
+                            el.innerHTML = '<p style="color: red;">Error loading content.</p>';
+                            el.style.visibility = 'visible';
+                        });
+                } else {
+                    const tempEl = document.createElement('textarea');
+                    tempEl.innerHTML = el.innerHTML.trim();
+                    const markdownContent = tempEl.value;
+                    el.innerHTML = marked.parse(markdownContent);
+                    el.style.visibility = 'visible';
+                }
+            });
+
+            // Tabs component logic
+            const tabs = document.querySelector('.tabs');
+            if (tabs) {
+                const tabButtons = tabs.querySelector('.tab-buttons');
+                const tabPanels = tabs.querySelectorAll('.tab-panel');
+
+                tabButtons.addEventListener('click', function(e) {
+                    if (e.target.matches('.tab-button')) {
+                        // Deactivate all buttons and panels
+                        tabButtons.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                        tabPanels.forEach(panel => panel.classList.remove('active'));
+
+                        // Activate clicked button and corresponding panel
+                        e.target.classList.add('active');
+                        const tabId = e.target.getAttribute('data-tab');
+                        document.getElementById(tabId).classList.add('active');
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
